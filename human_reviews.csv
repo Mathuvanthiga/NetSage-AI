@@ -1,0 +1,6 @@
+timestamp,case_id,ai_root_cause,confidence,human_decision,human_correction,reviewer_comment
+2026-08-30 13:00:00,4,VLAN 30 is not allowed on the trunk,high,Edited,Trunk allowed VLAN issue,Evidence pointed to Layer 2 trunk filtering.
+2026-08-30 13:01:00,9,Default gateway does not belong to the PC subnet,high,Accepted,,Gateway mismatch was supported by evidence.
+2026-08-30 13:02:00,20,ACL explicitly denies HTTP traffic,high,Edited,ACL blocking TCP/80,Evidence showed an ACL deny.
+2026-08-30 13:03:00,28,Guest isolation ACL is missing or incomplete,high,Rejected,Guest isolation failure,Security policy requires guest-to-internal blocking.
+2026-08-30 13:04:00,30,Multiple faults are visible,high,Edited,Wrong VLAN + DHCP failure + interface down,Evidence showed three separate faults.

@@ -1,0 +1,104 @@
+case_id,issue_type,symptom,topology_note,show_outputs,expected_fault,osi_layer,concept,severity
+1,Wrong VLAN assignment,PC-A in VLAN 10 cannot reach another PC in VLAN 10; link is up.,PC-A connected to SW1 Fa0/3; Fa0/3 should be an access port in VLAN 10.,"show vlan brief
+Fa0/3 listed under VLAN 20",PC-A access port assigned to VLAN 20 instead of VLAN 10,Layer 2,VLAN,Medium
+2,Missing VLAN,PC-B has an IP address but cannot communicate with VLAN 20 hosts.,SW1 and SW2 use VLAN 20; VLAN 20 must exist on both switches.,"show vlan brief
+VLAN 20 not present on SW2",VLAN 20 is missing on SW2,Layer 2,VLAN,Medium
+3,Trunk not configured,Devices in VLAN 10 across two switches cannot communicate.,SW1-SW2 link is Gi0/1 and must operate as a trunk.,"show interfaces trunk
+No Gi0/1 entry
+show interfaces Gi0/1 switchport
+Administrative Mode: static access",Inter-switch link is operating as an access port instead of trunk,Layer 2,Trunk,High
+4,Wrong trunk allowed VLAN,VLAN 30 hosts work locally but fail across SW1-SW2.,VLAN 30 must be allowed on the trunk.,"show interfaces trunk
+Port Gi0/1 allowed VLANs: 10,20",VLAN 30 is not allowed on the trunk,Layer 2,Trunk,High
+5,Access port in wrong VLAN,Printer connected to Fa0/8 gets connectivity to the wrong subnet.,Printer belongs to VLAN 30.,"show vlan brief
+Fa0/8 listed under VLAN 10",Printer access port is assigned to VLAN 10 instead of VLAN 30,Layer 2,VLAN,Medium
+6,Interface shutdown,PC cannot reach gateway; switch port LED is off.,PC-A is connected to SW1 Fa0/5; port should be enabled.,"show interfaces status
+Fa0/5 disabled",Interface Fa0/5 is administratively down,Layer 1,Interface,High
+7,Wrong IP address,PC can ping its gateway but cannot reach the intended server subnet.,PC should use 192.168.10.25/24 in VLAN 10.,"ipconfig
+IPv4 Address: 192.168.20.25
+Mask: 255.255.255.0
+Gateway: 192.168.20.1",PC has an address from the wrong subnet/VLAN,Layer 3,IP addressing,High
+8,Wrong subnet mask,PC can reach some hosts but cannot correctly route to remote networks.,LAN is 192.168.10.0/24.,"ipconfig
+IPv4: 192.168.10.25
+Mask: 255.255.0.0
+Gateway: 192.168.10.1",PC uses an incorrect subnet mask,Layer 3,Subnetting,Medium
+9,Wrong default gateway,PC can communicate with same-subnet hosts but not remote server.,VLAN 10 gateway is 192.168.10.1.,"ipconfig
+IPv4: 192.168.10.25
+Mask: 255.255.255.0
+Gateway: 192.168.20.1",Default gateway does not belong to the PC's subnet,Layer 3,Default gateway,High
+10,Duplicate IP,Two PCs intermittently lose connectivity and ARP behavior is inconsistent.,PC-A and PC-B should have unique addresses.,"show ip arp
+192.168.10.25 mapped to changing MAC addresses
+PC-A: 192.168.10.25
+PC-B: 192.168.10.25",Duplicate IP address exists on two devices,Layer 3,IP addressing,High
+11,Missing static route,LAN-A can reach its router but cannot reach LAN-B.,R1 must route 192.168.20.0/24 through R2.,"show ip route
+No entry for 192.168.20.0/24",Required static route to LAN-B is missing,Layer 3,Routing,High
+12,Incorrect static route,R1 sends traffic for LAN-B toward the wrong next hop.,R2 next hop is 10.0.0.2.,"show ip route 192.168.20.0
+Routing entry for 192.168.20.0/24
+via 10.0.0.3",Static route uses an incorrect next-hop address,Layer 3,Routing,High
+13,OSPF neighbor failure,R1 and R2 do not form an OSPF adjacency.,Both routers should use OSPF area 0 on the 10.0.0.0/30 link.,"show ip ospf neighbor
+No neighbors
+show ip ospf interface Gi0/0
+Area 1",OSPF area mismatch prevents adjacency,Layer 3,OSPF,High
+14,OSPF network not advertised,Router interfaces are up but remote LAN is absent from routing table.,R1 LAN 192.168.10.0/24 must be advertised in OSPF.,"show ip protocols
+Routing for Networks:
+10.0.0.0/30
+192.168.10.0/24 absent",LAN network is not included in OSPF configuration,Layer 3,OSPF,High
+15,DHCP pool missing,PC receives an APIPA address and cannot reach the network.,Router should provide DHCP for 192.168.10.0/24.,"show ip dhcp pool
+No pool named VLAN10
+ipconfig
+169.254.10.20",DHCP pool for VLAN 10 is missing,Layer 7,DHCP,High
+16,DHCP excluded-address problem,Clients fail to receive addresses even though DHCP service is enabled.,Pool is 192.168.10.0/24; only gateway and server addresses should be excluded.,"show ip dhcp pool VLAN10
+Network: 192.168.10.0/24
+Leased addresses: 0
+show run | include ip dhcp excluded-address
+192.168.10.1 192.168.10.254",Almost the entire DHCP range is excluded,Layer 7,DHCP,High
+17,Wrong DHCP gateway,PC receives an IP but cannot reach remote networks.,VLAN 20 gateway is 192.168.20.1.,"show ip dhcp pool VLAN20
+Default-router 192.168.10.1",DHCP supplies the wrong default gateway,Layer 7,DHCP,High
+18,DNS server misconfiguration,PC can ping a server by IP but cannot open it by hostname.,DNS server is 192.168.10.10.,"ipconfig /all
+DNS Server: 192.168.20.10
+ping 192.168.10.10
+Reply received",PC is configured with the wrong DNS server address,Layer 7,DNS,Medium
+19,DNS record missing,PC reaches DNS server but hostname resolution fails.,DNS server should contain an A record for server.lab.local.,"nslookup server.lab.local
+*** Non-existent domain",Required DNS record is missing,Layer 7,DNS,Medium
+20,ACL blocking traffic,PC can reach gateway but cannot reach web server on TCP 80.,ACL should permit VLAN 10 to the server subnet.,"show access-lists
+10 deny tcp 192.168.10.0 0.0.0.255 192.168.30.0 0.0.0.255 eq 80",ACL explicitly denies HTTP traffic,Layer 3/4,ACL,High
+21,Wrong ACL direction,ACL is intended to protect the server network but users lose access unexpectedly.,ACL should be applied inbound on the external interface.,"show run interface Gi0/1
+ip access-group 110 out",ACL is applied in the wrong direction,Layer 3/4,ACL,High
+22,ACL on wrong interface,Internal clients are blocked although ACL should only filter guest traffic.,ACL 120 is for guest VLAN traffic.,"show run | include access-group
+interface Gi0/0
+ ip access-group 120 in
+interface Gi0/1
+ no ip access-group 120",Guest ACL is applied to the internal-facing interface,Layer 3/4,ACL,High
+23,NAT missing,Inside PC can reach router but cannot access an outside server.,Inside LAN 192.168.10.0/24 must be translated on R1.,"show ip nat translations
+Pro Inside global: none
+show run | include ip nat inside
+No inside interface configured",NAT configuration is missing,Layer 3,NAT,High
+24,Incorrect NAT configuration,Inside clients have no usable translations.,Inside LAN is 192.168.10.0/24.,"show access-lists 1
+10 permit 192.168.20.0 0.0.0.255
+show ip nat translations
+No translations",NAT ACL matches the wrong source network,Layer 3,NAT,High
+25,NAT overload missing,Multiple inside PCs need Internet access but only one host works.,PAT/NAT overload should use the outside interface address.,"show run | include ip nat inside source
+ip nat inside source list 1 pool PUBLIC
+show ip nat statistics
+Overload: disabled",NAT is configured without overload/PAT for multiple clients,Layer 3,NAT,High
+26,Wireless wrong SSID/security,Laptop sees the AP but cannot associate.,SSID should be CampusWiFi and WPA2 key must match the configured key.,"Packet Tracer wireless settings
+SSID: GuestWiFi
+Security: WPA2
+AP SSID: CampusWiFi",Client is configured with the wrong SSID,Layer 2,Wireless,Medium
+27,Wireless client wrong VLAN,Wireless client associates successfully but gets an address from the wrong subnet.,Corporate SSID should map to VLAN 20.,"show vlan brief
+VLAN 10 active
+show interfaces trunk
+VLAN 20 not allowed",Wireless VLAN is not correctly mapped/allowed,Layer 2,Wireless VLAN,High
+28,Guest isolation failure,Guest Wi-Fi can reach an internal database server.,Guest VLAN 50 must not access internal VLAN 10.,"show access-lists GUEST
+No deny for 192.168.50.0 to 192.168.10.0
+ping 192.168.10.50
+Reply received",Guest isolation ACL is missing or incomplete,Layer 3/4,Wireless security,Critical
+29,Inter-VLAN routing failure,"PC gets IP and gateway ping works, but cannot reach a server in another VLAN.",Router-on-a-stick uses Gi0/0 subinterfaces for VLANs 10 and 30.,"show interfaces trunk
+Gi0/1 trunking
+show run interface Gi0/0.30
+No encapsulation dot1Q 30",VLAN 30 router subinterface is missing or incorrectly configured,Layer 3,Inter-VLAN routing,High
+30,Multiple faults,PC in VLAN 30 cannot reach server; gateway ping fails and DHCP address is incorrect.,"PC should be in VLAN 30, use 192.168.30.0/24, and reach gateway 192.168.30.1.","show vlan brief
+Fa0/12 in VLAN 20
+ipconfig
+169.254.30.5
+show ip interface brief
+Gi0/0.30 administratively down","Multiple faults: wrong access VLAN, DHCP failure, and VLAN 30 gateway interface down",Layer 2/3/7,Multiple faults,Critical

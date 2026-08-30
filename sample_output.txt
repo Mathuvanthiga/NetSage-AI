@@ -1,0 +1,4 @@
+NetSage AI Rule Checker
+=======================
+[HIGH] Gateway mismatch detected: IP=192.168.10.25, network=192.168.10.0/24, gateway=192.168.20.1
+[HIGH] Disabled/shutdown interface evidence detected
